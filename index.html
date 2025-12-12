@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MF Portfolio Allocator for 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .input-glow:focus-within {
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #064e3b, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Header -->
+    <header class="glass-card sticky top-0 z-20 border-b border-slate-200/50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold gradient-text tracking-tight">MF Portfolio Allocator for 2026</h1>
+                    <p class="text-xs text-slate-500 font-medium">Developed by <span class="text-emerald-600">Vivek Narkhede</span></p>
+                </div>
+            </div>
+            <!-- Optional: Year Badge -->
+            <div class="hidden sm:block">
+                <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">2026 Edition</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-6 sm:py-8 w-full">
+        
+        <!-- Input Section -->
+        <section class="glass-card rounded-3xl shadow-lg shadow-slate-200/50 p-6 sm:p-8 mb-8 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-600"></div>
+            
+            <label for="investmentAmount" class="block text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Total Investment Amount</label>
+            
+            <div class="relative max-w-lg mx-auto input-glow rounded-2xl transition-all duration-300 bg-white">
+                <div class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-2xl sm:text-3xl">&#8377;</div>
+                <input type="number" id="investmentAmount" 
+                    class="w-full pl-12 pr-6 py-4 sm:py-5 text-3xl sm:text-4xl font-bold text-slate-800 bg-transparent border-2 border-slate-100 rounded-2xl focus:outline-none text-center placeholder-slate-200" 
+                    placeholder="1,00,000"
+                    oninput="calculatePortfolio()">
+            </div>
+            <p class="text-slate-400 text-sm mt-4 font-medium">Enter your SIP or Lumpsum amount to visualize allocation</p>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+            
+            <!-- Chart Section -->
+            <div class="lg:col-span-5 glass-card rounded-3xl shadow-sm p-6 flex flex-col items-center justify-center min-h-[400px] relative order-2 lg:order-1">
+                <h3 class="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
+                    Allocation Breakdown
+                    <span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Interactive</span>
+                </h3>
+                
+                <div class="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square">
+                    <canvas id="portfolioChart"></canvas>
+                    <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                        <span class="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-widest uppercase mb-1">Total Assets</span>
+                        <span id="centerTotal" class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">&#8377;0</span>
+                    </div>
+                </div>
+
+                <div class="mt-8 w-full space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex justify-between items-center text-sm group">
+                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-emerald-700 transition-colors">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>
+                            Stock MF (70%)
+                        </span>
+                        <span class="font-bold text-slate-800" id="legendStock">&#8377;0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm group">
+                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-blue-700 transition-colors">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]"></span>
+                            Debt Fund (15%)
+                        </span>
+                        <span class="font-bold text-slate-800" id="legendDebt">&#8377;0</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm group">
+                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-yellow-600 transition-colors">
+                            <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.4)]"></span>
+                            Gold ETF (15%)
+                        </span>
+                        <span class="font-bold text-slate-800" id="legendGold">&#8377;0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breakdown Details -->
+            <div class="lg:col-span-7 space-y-6 order-1 lg:order-2">
+                
+                <!-- Stock Section (70%) -->
+                <div class="glass-card rounded-3xl shadow-sm overflow-hidden border-0 ring-1 ring-slate-100">
+                    <div class="bg-gradient-to-r from-emerald-50 to-white px-6 py-5 border-b border-emerald-100/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-xl">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg">Stock Mutual Funds</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">70% Allocation</p>
+                                </div>
+                            </div>
+                        </div>
+                        <span id="totalStockVal" class="text-2xl font-bold text-emerald-700 tracking-tight">&#8377;0</span>
+                    </div>
+                    
+                    <div class="p-4 sm:p-6 grid gap-4 grid-cols-1 sm:grid-cols-2">
+                        <!-- Nifty 50 -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">60% OF EQUITY</span>
+                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                </div>
+                            </div>
+                            <h4 class="text-sm text-slate-400 font-medium mb-1">Large Cap / Nifty 50</h4>
+                            <div id="valNifty" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                        </div>
+
+                        <!-- Flexi Cap -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">20% OF EQUITY</span>
+                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                                </div>
+                            </div>
+                            <h4 class="text-sm text-slate-400 font-medium mb-1">Flexi Cap Fund</h4>
+                            <div id="valFlexi" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                        </div>
+
+                        <!-- Mid Cap -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">10% OF EQUITY</span>
+                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                </div>
+                            </div>
+                            <h4 class="text-sm text-slate-400 font-medium mb-1">Mid Cap Fund</h4>
+                            <div id="valMid" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                        </div>
+
+                        <!-- Small Cap -->
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">10% OF EQUITY</span>
+                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                            </div>
+                            <h4 class="text-sm text-slate-400 font-medium mb-1">Small Cap Fund</h4>
+                            <div id="valSmall" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <!-- Debt Fund -->
+                    <div class="glass-card rounded-3xl p-6 card-hover relative overflow-hidden group border-0 ring-1 ring-slate-100">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="bg-blue-100 p-2 rounded-xl text-blue-600 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h3 class="font-bold text-slate-700">Debt Funds</h3>
+                            </div>
+                            <div id="valDebt" class="text-3xl font-bold text-blue-600 mb-2 tracking-tight">&#8377;0</div>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded">SAFE HAVEN</span>
+                                <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md">15%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gold ETF -->
+                    <div class="glass-card rounded-3xl p-6 card-hover relative overflow-hidden group border-0 ring-1 ring-slate-100">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-yellow-50/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="bg-yellow-100 p-2 rounded-xl text-yellow-600 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                                <h3 class="font-bold text-slate-700">Gold ETF</h3>
+                            </div>
+                            <div id="valGold" class="text-3xl font-bold text-yellow-500 mb-2 tracking-tight">&#8377;0</div>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded">HEDGE</span>
+                                <span class="text-xs font-bold bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-md">15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-8 bg-white/50 backdrop-blur-sm border-t border-slate-200/50">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+             <div class="flex items-center justify-center gap-2 mb-4">
+                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">MF Allocator 2026</p>
+                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+            </div>
+            <p class="text-slate-400 text-[10px] leading-relaxed max-w-2xl mx-auto">
+                <strong>Disclaimer:</strong> I am not a SEBI-registered investment advisor. The information, illustrations, calculations, or content shared on this page are for educational and informational purposes only. They should not be considered as financial advice, investment recommendations, or suggestions of any kind. Users are advised to consult a SEBI-registered financial advisor or other qualified professionals before making any investment decisions. All investments are subject to market risks; please conduct your own research and verify independently.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Configuration ---
+        const allocation = {
+            debt: 0.15,
+            gold: 0.15,
+            stockTotal: 0.70,
+            stockBreakdown: {
+                nifty: 0.60, // 60% of stockTotal
+                flexi: 0.20, // 20% of stockTotal
+                mid: 0.10,   // 10% of stockTotal
+                small: 0.10  // 10% of stockTotal
+            }
+        };
+
+        // --- Chart Initialization ---
+        const ctx = document.getElementById('portfolioChart').getContext('2d');
+        
+        // Font setup for Chart.js
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        
+        const portfolioChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Nifty 50', 'Flexi Cap', 'Mid Cap', 'Small Cap', 'Debt Fund', 'Gold ETF'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        '#10b981', // Nifty (Emerald 500)
+                        '#34d399', // Flexi (Emerald 400)
+                        '#6ee7b7', // Mid (Emerald 300)
+                        '#a7f3d0', // Small (Emerald 200)
+                        '#3b82f6', // Debt (Blue 500)
+                        '#facc15'  // Gold (Yellow 400)
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                    hoverBorderWidth: 4,
+                    hoverBorderColor: '#ffffff'
+                }]
+            },
+            options: {
+                cutout: '80%',
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                },
+                layout: {
+                    padding: 10
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.parsed);
+                                }
+                                return label;
+                            },
+                            title: function() { return '' } // Hide title to make it cleaner
+                        },
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e293b',
+                        bodyColor: '#1e293b',
+                        bodyFont: {
+                            weight: 'bold',
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 12,
+                        displayColors: true,
+                        borderColor: 'rgba(0,0,0,0.05)',
+                        borderWidth: 1,
+                        boxPadding: 4
+                    }
+                }
+            }
+        });
+
+        // --- Core Logic ---
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function calculatePortfolio() {
+            const inputVal = document.getElementById('investmentAmount').value;
+            const amount = parseFloat(inputVal) || 0;
+
+            // Calculate High Level
+            const debtVal = amount * allocation.debt;
+            const goldVal = amount * allocation.gold;
+            const stockTotalVal = amount * allocation.stockTotal;
+
+            // Calculate Stock Breakdown
+            const niftyVal = stockTotalVal * allocation.stockBreakdown.nifty;
+            const flexiVal = stockTotalVal * allocation.stockBreakdown.flexi;
+            const midVal = stockTotalVal * allocation.stockBreakdown.mid;
+            const smallVal = stockTotalVal * allocation.stockBreakdown.small;
+
+            // Update Text UI
+            document.getElementById('centerTotal').innerText = inputVal ? formatCurrency(amount) : '₹0';
+            
+            // Stock Section
+            document.getElementById('totalStockVal').innerText = formatCurrency(stockTotalVal);
+            document.getElementById('valNifty').innerText = formatCurrency(niftyVal);
+            document.getElementById('valFlexi').innerText = formatCurrency(flexiVal);
+            document.getElementById('valMid').innerText = formatCurrency(midVal);
+            document.getElementById('valSmall').innerText = formatCurrency(smallVal);
+
+            // Debt & Gold
+            document.getElementById('valDebt').innerText = formatCurrency(debtVal);
+            document.getElementById('valGold').innerText = formatCurrency(goldVal);
+            
+            // Legend Totals
+            document.getElementById('legendStock').innerText = formatCurrency(stockTotalVal);
+            document.getElementById('legendDebt').innerText = formatCurrency(debtVal);
+            document.getElementById('legendGold').innerText = formatCurrency(goldVal);
+
+            // Update Chart
+            portfolioChart.data.datasets[0].data = [niftyVal, flexiVal, midVal, smallVal, debtVal, goldVal];
+            portfolioChart.update();
+        }
+
+        // Initialize with default empty state
+        calculatePortfolio();
+
+    </script>
+</body>
+</html>
