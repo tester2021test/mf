@@ -13,16 +13,16 @@
             background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%);
         }
         .glass-card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
         .card-hover {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .input-glow:focus-within {
             box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
@@ -32,6 +32,9 @@
             background: linear-gradient(to right, #064e3b, #059669);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        .progress-bar {
+            transition: width 1s ease-out;
         }
     </style>
 </head>
@@ -51,7 +54,6 @@
                     <p class="text-xs text-slate-500 font-medium">Developed by <span class="text-emerald-600">Vivek Narkhede</span></p>
                 </div>
             </div>
-            <!-- Optional: Year Badge -->
             <div class="hidden sm:block">
                 <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">2026 Edition</span>
             </div>
@@ -66,52 +68,71 @@
             
             <label for="investmentAmount" class="block text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">Total Investment Amount</label>
             
-            <div class="relative max-w-lg mx-auto input-glow rounded-2xl transition-all duration-300 bg-white">
+            <div class="relative max-w-lg mx-auto input-glow rounded-2xl transition-all duration-300 bg-white shadow-sm">
                 <div class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-2xl sm:text-3xl">&#8377;</div>
                 <input type="number" id="investmentAmount" 
                     class="w-full pl-12 pr-6 py-4 sm:py-5 text-3xl sm:text-4xl font-bold text-slate-800 bg-transparent border-2 border-slate-100 rounded-2xl focus:outline-none text-center placeholder-slate-200" 
                     placeholder="1,00,000"
                     oninput="calculatePortfolio()">
             </div>
-            <p class="text-slate-400 text-sm mt-4 font-medium">Enter your SIP or Lumpsum amount to visualize allocation</p>
+            <p class="text-emerald-600/80 text-xs font-medium mt-4 bg-emerald-50 inline-block px-3 py-1 rounded-full border border-emerald-100">
+                ✨ Enter amount to see live breakdown
+            </p>
         </section>
 
+        <!-- Main Grid: Chart first on mobile (order-1), Breakdown second (order-2) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
             
             <!-- Chart Section -->
-            <div class="lg:col-span-5 glass-card rounded-3xl shadow-sm p-6 flex flex-col items-center justify-center min-h-[400px] relative order-2 lg:order-1">
+            <div class="lg:col-span-5 glass-card rounded-3xl shadow-sm p-6 flex flex-col relative">
                 <h3 class="text-lg font-bold text-slate-700 mb-6 flex items-center gap-2">
-                    Allocation Breakdown
-                    <span class="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-1 rounded-full">Interactive</span>
+                    Visual Breakdown
+                    <span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">Summary</span>
                 </h3>
                 
-                <div class="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square">
-                    <canvas id="portfolioChart"></canvas>
-                    <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                        <span class="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-widest uppercase mb-1">Total Assets</span>
-                        <span id="centerTotal" class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">&#8377;0</span>
+                <div class="flex-grow flex flex-col items-center justify-center min-h-[300px]">
+                    <div class="relative w-full max-w-[260px] sm:max-w-[300px] aspect-square">
+                        <canvas id="portfolioChart"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                            <span class="text-[10px] sm:text-xs text-slate-400 font-semibold tracking-widest uppercase mb-1">Total Assets</span>
+                            <span id="centerTotal" class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">&#8377;0</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-8 w-full space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                    <div class="flex justify-between items-center text-sm group">
-                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-emerald-700 transition-colors">
-                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>
-                            Stock MF (70%)
+                <!-- Portfolio DNA Bar -->
+                <div class="mt-6 mb-4">
+                     <p class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider text-center">Portfolio Strategy</p>
+                     <div class="flex h-3 w-full rounded-full overflow-hidden">
+                         <div class="bg-emerald-500 h-full w-[70%]"></div>
+                         <div class="bg-blue-400 h-full w-[15%]"></div>
+                         <div class="bg-yellow-400 h-full w-[15%]"></div>
+                     </div>
+                     <div class="flex justify-between text-[10px] font-bold text-slate-500 mt-2 px-1">
+                         <span class="text-emerald-600">70% GROWTH</span>
+                         <span class="text-slate-400">30% STABILITY</span>
+                     </div>
+                </div>
+
+                <div class="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-100">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="flex items-center gap-2 text-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Equity (High Growth)
                         </span>
                         <span class="font-bold text-slate-800" id="legendStock">&#8377;0</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm group">
-                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-blue-700 transition-colors">
-                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]"></span>
-                            Debt Fund (15%)
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="flex items-center gap-2 text-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            Debt (Stability)
                         </span>
                         <span class="font-bold text-slate-800" id="legendDebt">&#8377;0</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm group">
-                        <span class="flex items-center gap-3 text-slate-600 group-hover:text-yellow-600 transition-colors">
-                            <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.4)]"></span>
-                            Gold ETF (15%)
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="flex items-center gap-2 text-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                            Gold (Hedge)
                         </span>
                         <span class="font-bold text-slate-800" id="legendGold">&#8377;0</span>
                     </div>
@@ -119,116 +140,141 @@
             </div>
 
             <!-- Breakdown Details -->
-            <div class="lg:col-span-7 space-y-6 order-1 lg:order-2">
+            <div class="lg:col-span-7 space-y-6">
                 
                 <!-- Stock Section (70%) -->
                 <div class="glass-card rounded-3xl shadow-sm overflow-hidden border-0 ring-1 ring-slate-100">
-                    <div class="bg-gradient-to-r from-emerald-50 to-white px-6 py-5 border-b border-emerald-100/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-emerald-100 text-emerald-600 p-2.5 rounded-xl">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-lg">Stock Mutual Funds</h3>
-                                <div class="flex items-center gap-2">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                                    <p class="text-xs text-slate-500 font-medium uppercase tracking-wide">70% Allocation</p>
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-emerald-50 to-white px-6 py-5 border-b border-emerald-100/50">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-lg">Equity Funds</h3>
+                                    <p class="text-xs text-slate-500">Wealth Creators • <span class="text-emerald-600 font-bold">70% Allocation</span></p>
                                 </div>
                             </div>
+                            <span id="totalStockVal" class="text-2xl font-bold text-emerald-700 tracking-tight">&#8377;0</span>
                         </div>
-                        <span id="totalStockVal" class="text-2xl font-bold text-emerald-700 tracking-tight">&#8377;0</span>
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-emerald-100 h-1.5 rounded-full mt-2">
+                            <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 70%"></div>
+                        </div>
                     </div>
                     
                     <div class="p-4 sm:p-6 grid gap-4 grid-cols-1 sm:grid-cols-2">
                         <!-- Nifty 50 -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">60% OF EQUITY</span>
-                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <div class="flex flex-col h-full justify-between relative z-10">
+                                <div>
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="text-sm text-slate-500 font-bold uppercase tracking-wide">Large Cap</h4>
+                                    </div>
+                                    <div class="text-xs text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded mb-2">Top 50 Giants</div>
+                                    <div id="valNifty" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                                </div>
+                                <div class="mt-3 text-[10px] text-slate-400 font-medium border-t border-slate-100 pt-2 flex justify-between">
+                                    <span>Nifty 50 Index</span>
+                                    <span>60% of Equity</span>
                                 </div>
                             </div>
-                            <h4 class="text-sm text-slate-400 font-medium mb-1">Large Cap / Nifty 50</h4>
-                            <div id="valNifty" class="text-xl font-bold text-slate-800">&#8377;0</div>
                         </div>
 
                         <!-- Flexi Cap -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">20% OF EQUITY</span>
-                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group relative overflow-hidden">
+                             <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                            </div>
+                            <div class="flex flex-col h-full justify-between relative z-10">
+                                <div>
+                                    <h4 class="text-sm text-slate-500 font-bold uppercase tracking-wide mb-1">Flexi Cap</h4>
+                                    <div class="text-xs text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded mb-2">Dynamic Growth</div>
+                                    <div id="valFlexi" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                                </div>
+                                <div class="mt-3 text-[10px] text-slate-400 font-medium border-t border-slate-100 pt-2 flex justify-between">
+                                    <span>Diversified</span>
+                                    <span>20% of Equity</span>
                                 </div>
                             </div>
-                            <h4 class="text-sm text-slate-400 font-medium mb-1">Flexi Cap Fund</h4>
-                            <div id="valFlexi" class="text-xl font-bold text-slate-800">&#8377;0</div>
                         </div>
 
                         <!-- Mid Cap -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">10% OF EQUITY</span>
-                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            </div>
+                            <div class="flex flex-col h-full justify-between relative z-10">
+                                <div>
+                                    <h4 class="text-sm text-slate-500 font-bold uppercase tracking-wide mb-1">Mid Cap</h4>
+                                    <div class="text-xs text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded mb-2">Emerging Leaders</div>
+                                    <div id="valMid" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                                </div>
+                                <div class="mt-3 text-[10px] text-slate-400 font-medium border-t border-slate-100 pt-2 flex justify-between">
+                                    <span>High Potential</span>
+                                    <span>10% of Equity</span>
                                 </div>
                             </div>
-                            <h4 class="text-sm text-slate-400 font-medium mb-1">Mid Cap Fund</h4>
-                            <div id="valMid" class="text-xl font-bold text-slate-800">&#8377;0</div>
                         </div>
 
                         <!-- Small Cap -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-md border border-emerald-100">10% OF EQUITY</span>
-                                <div class="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 card-hover group relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                            </div>
+                            <div class="flex flex-col h-full justify-between relative z-10">
+                                <div>
+                                    <h4 class="text-sm text-slate-500 font-bold uppercase tracking-wide mb-1">Small Cap</h4>
+                                    <div class="text-xs text-emerald-600 bg-emerald-50 inline-block px-2 py-0.5 rounded mb-2">Hidden Gems</div>
+                                    <div id="valSmall" class="text-xl font-bold text-slate-800">&#8377;0</div>
+                                </div>
+                                <div class="mt-3 text-[10px] text-slate-400 font-medium border-t border-slate-100 pt-2 flex justify-between">
+                                    <span>Aggressive</span>
+                                    <span>10% of Equity</span>
                                 </div>
                             </div>
-                            <h4 class="text-sm text-slate-400 font-medium mb-1">Small Cap Fund</h4>
-                            <div id="valSmall" class="text-xl font-bold text-slate-800">&#8377;0</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Stability Section -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Debt Fund -->
                     <div class="glass-card rounded-3xl p-6 card-hover relative overflow-hidden group border-0 ring-1 ring-slate-100">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                         <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                         <div class="relative z-10">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="bg-blue-100 p-2 rounded-xl text-blue-600 shadow-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
+                            <div class="flex items-center gap-3 mb-2">
                                 <h3 class="font-bold text-slate-700">Debt Funds</h3>
                             </div>
-                            <div id="valDebt" class="text-3xl font-bold text-blue-600 mb-2 tracking-tight">&#8377;0</div>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded">SAFE HAVEN</span>
-                                <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md">15%</span>
+                            <div class="text-xs text-blue-600 bg-blue-50 inline-block px-2 py-0.5 rounded mb-3">Safe Haven</div>
+                            <div id="valDebt" class="text-2xl font-bold text-blue-600 mb-2 tracking-tight">&#8377;0</div>
+                            <div class="flex justify-between items-center mt-4 border-t border-slate-100 pt-3">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">Stability</span>
+                                <span class="text-xs font-bold text-blue-500">15%</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Gold ETF -->
                     <div class="glass-card rounded-3xl p-6 card-hover relative overflow-hidden group border-0 ring-1 ring-slate-100">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-yellow-400"></div>
                         <div class="absolute top-0 right-0 w-24 h-24 bg-yellow-50/50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
                         <div class="relative z-10">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="bg-yellow-100 p-2 rounded-xl text-yellow-600 shadow-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                    </svg>
-                                </div>
+                            <div class="flex items-center gap-3 mb-2">
                                 <h3 class="font-bold text-slate-700">Gold ETF</h3>
                             </div>
-                            <div id="valGold" class="text-3xl font-bold text-yellow-500 mb-2 tracking-tight">&#8377;0</div>
-                            <div class="flex justify-between items-center mt-2">
-                                <span class="text-xs text-slate-400 font-medium bg-slate-50 px-2 py-1 rounded">HEDGE</span>
-                                <span class="text-xs font-bold bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-md">15%</span>
+                            <div class="text-xs text-yellow-600 bg-yellow-50 inline-block px-2 py-0.5 rounded mb-3">Inflation Hedge</div>
+                            <div id="valGold" class="text-2xl font-bold text-yellow-500 mb-2 tracking-tight">&#8377;0</div>
+                            <div class="flex justify-between items-center mt-4 border-t border-slate-100 pt-3">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">Protection</span>
+                                <span class="text-xs font-bold text-yellow-500">15%</span>
                             </div>
                         </div>
                     </div>
